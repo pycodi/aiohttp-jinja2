@@ -8,7 +8,7 @@ from aiohttp.abc import AbstractView
 
 __version__ = '0.13.0'
 
-__all__ = ('setup', 'get_env', 'render_template', 'template', 'filters', 'all_filters')
+__all__ = ('setup', 'get_env', 'render_template', 'template', 'filters', 'all_filters', 'all_extensions')
 
 
 APP_CONTEXT_PROCESSORS_KEY = 'aiohttp_jinja2_context_processors'
@@ -16,6 +16,7 @@ APP_KEY = 'aiohttp_jinja2_environment'
 REQUEST_CONTEXT_KEY = 'aiohttp_jinja2_context'
 
 all_filters = {}
+all_extensions = []
 
 
 def setup(app, *args, app_key=APP_KEY, context_processors=(), filters=all_filters, **kwargs):
@@ -23,6 +24,10 @@ def setup(app, *args, app_key=APP_KEY, context_processors=(), filters=all_filter
     if filters is not None:
         env.filters.update(all_filters)
     app[app_key] = env
+
+    for ext in all_extensions:
+        env.add_extension(ext)
+
     if context_processors:
         app[APP_CONTEXT_PROCESSORS_KEY] = context_processors
         app.middlewares.append(context_processors_middleware)
@@ -108,6 +113,12 @@ def template(template_name, *, app_key=APP_KEY, encoding='utf-8', status=200):
 def filters():
     def wrapper(func):
         all_filters[func.__name__] = func
+    return wrapper
+
+
+def extensions():
+    def wrapper(func):
+        all_extensions.append(func)
     return wrapper
 
 
